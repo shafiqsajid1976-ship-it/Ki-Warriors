@@ -51,11 +51,10 @@ jobs:
       - name: Decode signing keystore
         shell: bash
         env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_HEX: ${{ secrets.KEYSTORE_HEX }}
         run: |
-          printf '%s' "$KEYSTORE_BASE64" |
-            tr -d '[:space:]' |
-            base64 --decode > upload-keystore.jks
+          printf '%s' "$KEYSTORE_HEX" |
+            xxd -r -p > upload-keystore.jks
 
       - name: Check signing keystore
         shell: bash
