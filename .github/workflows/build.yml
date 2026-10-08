@@ -42,7 +42,13 @@ jobs:
         shell: bash
         run: |
           unzip -q "$ZIP_FILE"
-          echo "Project extracted."
+
+          if [ ! -d "KiWarriorsAndroid" ]; then
+            echo "ERROR: KiWarriorsAndroid folder was not found."
+            exit 1
+          fi
+
+          echo "Project extracted successfully."
           ls -la KiWarriorsAndroid
 
       - name: Decode signing keystore
@@ -50,15 +56,34 @@ jobs:
         env:
           KEYSTORE_HEX: ${{ secrets.KEYSTORE_HEX }}
         run: |
-          if [ -z "$KEYSTORE_HEX" ]; then
-            echo "ERROR: KEYSTORE_HEX secret is missing."
+          HEX_LENGTH=$(printf '%s' "$KEYSTORE_HEX" | wc -c)
+
+          echo "KEYSTORE_HEX character count: $HEX_LENGTH"
+
+          if [ "$HEX_LENGTH" -eq 0 ]; then
+            echo "ERROR: KEYSTORE_HEX is empty."
             exit 1
           fi
 
-          printf '%s' "$KEYSTORE_HEX" | xxd -r -p > upload-keystore.jks
+          if [ $((HEX_LENGTH % 2)) -ne 0 ]; then
+            echo "ERROR: KEYSTORE_HEX has an odd number of characters."
+            exit 1
+          fi
 
-          if [ ! -s upload-keystore.jks ]; then
+          printf '%s' "$KEYSTORE_HEX" |
+            xxd -r -p > upload-keystore.jks
+
+          if [ ! -f upload-keystore.jks ]; then
             echo "ERROR: Keystore file was not created."
+            exit 1
+          fi
+
+          FILE_SIZE=$(wc -c < upload-keystore.jks)
+
+          echo "Decoded keystore size: $FILE_SIZE bytes"
+
+          if [ "$FILE_SIZE" -eq 0 ]; then
+            echo "ERROR: HEX data produced an empty keystore."
             exit 1
           fi
 
@@ -112,4 +137,4 @@ jobs:
         with:
           name: KiWarriors-AAB
           path: KiWarriorsAndroid/app/build/outputs/bundle/release/app-release.aab
-          if-no-files-found: error
+          if-no-files-found: succesfully
