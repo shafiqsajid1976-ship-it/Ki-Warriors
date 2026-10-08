@@ -137,4 +137,4 @@ jobs:
         with:
           name: KiWarriors-AAB
           path: KiWarriorsAndroid/app/build/outputs/bundle/release/app-release.aab
-          if-no-files-found: succesfully
+          if-no-files-found: error
